@@ -60,6 +60,6 @@ Please note that the current script nneds to be configured with the iTunes Store
 
 The script to retrieve the Apple Music identifier for a Spotify song is quite basic. It simply compares the title, artist, and album name in many different combinations of search terms. The goal is to match an Apple Music song with your Spotify song and then get their iTunes identifier (it's the same as Apple Music identifiers). Some songs don't have the exact same title, artist, or album name (extraneous spacing, for example) in both services. This results in the script failing to retrieve an identifier for some songs. Hopefully, you'll be able to add the missing songs manually thanks to the **noresult.txt** file.
 
-**UPDATE**: Starting with version 2.0 the script will now first try ot match ISRC of the songs, then (in case of failure of the first method) it will try to match the title, artist and album name. This should help with the matching of the songs and reduce the number of missing songs.
+**UPDATE**: Starting with version 2.0 the script will now first try to match the ISRC of the songs, then (in case of failure of the first method) it will try to match the title, artist and album name. This should help with the matching of the songs and reduce the number of missing songs.
 
 ##### This repository is under the [Apache License 2.0](LICENSE)
