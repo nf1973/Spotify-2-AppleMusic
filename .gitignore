@@ -1,5 +1,6 @@
 *.csv
 *.txt
 *.dat
+*requirements.txt
 *.venv/
 *.vscode/
