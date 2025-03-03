@@ -8,7 +8,7 @@ import requests
 import os
 from ratelimit import limits
 from bs4 import BeautifulSoup
-from dateutil.parser import parse
+import dateparser
 
 # Delay (in seconds) to wait between tracks (to avoid getting rate limted) - reduce at own risk
 delay = 1
@@ -99,11 +99,11 @@ def verify_release_date(item: json, date: str) -> bool:
         return False
     soup = BeautifulSoup(req.text, "html.parser")
     # fetch the release date from the tracklist-footer-description
-    return parse(
+    return dateparser.parse(
         soup.find("p", {"data-testid": "tracklist-footer-description"}).text.split(
             "\n"
         )[0]
-    ) == parse(date)
+    ) == dateparser.parse(date)
 
 
 def try_to_match(url, title, artist, album, date) -> str | None:
