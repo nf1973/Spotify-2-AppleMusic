@@ -98,12 +98,14 @@ def verify_release_date(item: json, date: str) -> bool:
     if req.status_code != 200:
         return False
     soup = BeautifulSoup(req.text, "html.parser")
+    element = soup.find("p", {"data-testid": "tracklist-footer-description"})
+    if not element:
+        return False
+    date_strs = element.text.split("\n")
+    if len(date_strs) == 0:
+        return
     # fetch the release date from the tracklist-footer-description
-    return dateparser.parse(
-        soup.find("p", {"data-testid": "tracklist-footer-description"}).text.split(
-            "\n"
-        )[0]
-    ) == dateparser.parse(date)
+    return dateparser.parse(date_strs[0]) == dateparser.parse(date)
 
 
 def try_to_match(url, title, artist, album, date) -> str | None:
