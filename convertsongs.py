@@ -103,9 +103,13 @@ def verify_release_date(item: json, date: str) -> bool:
         return False
     date_strs = element.text.split("\n")
     if len(date_strs) == 0:
-        return
+        return False
+    date = dateparser.parse(date)
+    parse_date = dateparser.parse(date_strs[0])
+    if not date or not parse_date:
+        return False
     # fetch the release date from the tracklist-footer-description
-    return dateparser.parse(date_strs[0]) == dateparser.parse(date)
+    return date == parse_date
 
 
 def try_to_match(url, title, artist, album, date) -> str | None:
