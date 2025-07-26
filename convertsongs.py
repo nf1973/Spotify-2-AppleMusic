@@ -44,6 +44,15 @@ def create_apple_music_playlist(session, playlist_name):
     if response.status_code == 201:
         sleep(0.2)
         return response.json()['data'][0]['id']
+    elif response.status_code == 400:
+        try:
+            error_data = response.json()
+            for error in error_data.get("errors", []):
+                print(f"\nError 400: Bad Request. {error.get('code')}: {error.get('messageForDisplay')}")
+                print(f"\n{error.get('title')}: {error.get('detail')}")
+        except Exception as e:
+            print(f"Error 400: 'Bad Request' while creating playlist {playlist_name}!")
+        sys.exit(1)
     elif response.status_code == 401:
         print("\nError 401: Unauthorized. Please refer to the README and check you have entered your Bearer Token, Media-User-Token and session cookies.\n")
         sys.exit(1)
