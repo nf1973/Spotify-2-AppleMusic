@@ -10,7 +10,7 @@ Based on the work of [@simonschellaert](https://github.com/simonschellaert/spoti
 
 The first step is getting the songs you want to import into Apple Music into a CSV file. The simplest way to do this is to use [Exportify](https://watsonbox.github.io/exportify/).
 
-You just need to login using your Spotify account, and all the playlists that you have saved in your library should appear. Then export the CSV file of the playlist you want to convert and save it in the same directory as the directory where you cloned the repo.
+You just need to login using your Spotify account, and all the playlists that you have saved in your library should appear. *Please make sure that Exportify is set to "English" (so that the column headers are in English)*, then export the CSV file of the playlist you want to convert and save it in the same directory as the directory where you cloned the repo.
 
 ### 2. Match the Spotify songs with their Apple Music identifier and upload them to Apple Music
 
