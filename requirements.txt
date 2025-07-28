@@ -1,0 +1,4 @@
+beautifulsoup4==4.13.3
+dateparser==1.2.1
+ratelimit==2.2.1
+Requests==2.32.3

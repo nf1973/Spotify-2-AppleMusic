@@ -32,7 +32,13 @@ Here's a step by step to get all of this data:
 
    **ALL THIS DATA IS CASE SENSITIVE**. PLEASE MAKE SURE TO COPY IT RIGHT.
 
-7. Now you're finally ready to connvert your songs and push them onto your Apple Music playlist. To do so, open a terminal and run the following:
+7. Install the python dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+8. Now you're finally ready to connvert your songs and push them onto your Apple Music playlist. To do so, open a terminal and run the following:
 
 ```bash
 python3 convertsongs.py yourplaylist.csv
