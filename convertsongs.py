@@ -9,6 +9,11 @@ import os
 from ratelimit import limits
 from bs4 import BeautifulSoup
 import dateparser
+from csv_column_names import (
+    valid_track_names_columns,
+    valid_artist_names_columns,
+    valid_album_names_columns
+)
 
 # Delay (in seconds) to wait between tracks (to avoid getting rate limted) - reduce at own risk
 delay = 1
@@ -387,9 +392,9 @@ def create_playlist_and_add_song(file):
         file = csv.reader(file)
         header_row = next(file)
         if (
-            header_row[1] != "Track Name"
-            or header_row[3] != "Artist Name(s)"
-            or header_row[5] != "Album Name"
+            header_row[1] not in valid_track_names_columns
+            or header_row[3] not in valid_artist_names_columns
+            or header_row[5] not in valid_album_names_columns
             or header_row[16] != "ISRC"
         ):
             print(
