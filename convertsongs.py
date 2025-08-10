@@ -93,14 +93,19 @@ country_code = get_connection_data(
 # apple limit is 20 calls per minute
 @limits(calls=19, period=1)
 def call_api(url: str) -> json:
+    print(f"Calling API: {url}")
     for _ in range(3):
         req = requests.get(url)
         if req.status_code == 200:
             return req.json()
+        elif req.status_code == 404:
+            print(f"404 Not Found for {url} — skipping.")
+            return {"results": []}  # Return results as empty to avoid breaking the flow
         else:
-            print("Error {req.status_code} while calling API, retrying...")
-    raise Exception(f"Error {req.status_code} while calling API {url}!")
+            print(f"Error {req.status_code} while calling API, retrying...")
 
+    print(f"Failed to fetch {url} after retries.")
+    return {"results": []}  # Return results as empty to avoid breaking the flow
 
 def verify_release_date(item: json, date: str) -> bool:
     req = requests.get(item["trackViewUrl"])
