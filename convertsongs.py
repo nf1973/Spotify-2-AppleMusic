@@ -16,6 +16,7 @@ from csv_column_names import (
 )
 
 # Delay (in seconds) to wait between tracks (to avoid getting rate limted) - reduce at own risk
+# NOTE: This is not currently used, I'm using dynamic sleep times based on api_calls_this_track
 delay = 1
 
 # Checking if the command is correct
@@ -99,18 +100,19 @@ country_code = get_connection_data(
 @limits(calls=19, period=1)
 def call_api(url: str) -> json:
     print(f"Calling API: {url}")
-    for _ in range(3):
-        req = requests.get(url)
-        if req.status_code == 200:
-            return req.json()
-        elif req.status_code == 404:
-            print(f"404 Not Found for {url} — skipping.")
-            return {"results": []}  # Return results as empty to avoid breaking the flow
-        else:
-            print(f"Error {req.status_code} while calling API, retrying...")
-
-    print(f"Failed to fetch {url} after retries.")
-    return {"results": []}  # Return results as empty to avoid breaking the flow
+    try:
+        for _ in range(3):
+            req = requests.get(url)
+            if req.status_code == 200:
+                return req.json()
+            elif req.status_code == 404:
+                print(f"404 Not Found for {url} — skipping.")
+                return {"results": []}  # Return results as empty to avoid breaking the flow
+            else:
+                print(f"Error {req.status_code} while calling API, retrying...")
+    except:
+        print(f"Failed to fetch {url} after retries.")
+        return {"results": []}  # Return results as empty to avoid breaking the flow
 
 def verify_release_date(item: json, date: str) -> bool:
     req = requests.get(item["trackViewUrl"])
@@ -409,61 +411,71 @@ def create_playlist_and_add_song(file):
         failed = 0
         # Looping through the CSV file
         for row in file:
-            n += 1
-            # Trying to get the iTunes ID of the song
-            title, artist, album, album_artist, date, isrc = (
-                escape_apostrophes(row[1]),
-                escape_apostrophes(row[3]),
-                escape_apostrophes(row[5]),
-                escape_apostrophes(row[7]),
-                escape_apostrophes(row[8]),
-                escape_apostrophes(row[16]),
-            )
-            track_id = match_isrc_to_itunes_id(s, album, album_artist, isrc)
-            if track_id:
-                isrc_based += 1
-            else:
-                print(
-                    f"No result found for {title} | {artist} | {album} | {date} with {isrc}. Trying text based search..."
+            try:
+                n += 1
+                api_calls_this_track = 0
+                # Trying to get the iTunes ID of the song
+                title, artist, album, album_artist, date, isrc = (
+                    escape_apostrophes(row[1]),
+                    escape_apostrophes(row[3]),
+                    escape_apostrophes(row[5]),
+                    escape_apostrophes(row[7]),
+                    escape_apostrophes(row[8]),
+                    escape_apostrophes(row[16]),
                 )
-                track_id = get_itunes_id(title, artist, album, date)
+                track_id = match_isrc_to_itunes_id(s, album, album_artist, isrc)
+                api_calls_this_track += 1
                 if track_id:
-                    text_based += 1
-            # If the song is found, add it to the playlist
-            if track_id:
-                print(f"N°{n} | {title} | {artist} | {album} => {track_id}")
-                if str(track_id) in playlist_track_ids:
-                    print(f"Song {track_id} already in playlist {playlist_name}!\n")
-                    failed += 1
-                    continue
-                if delay >= 0.5:
-                    sleep(delay)
+                    isrc_based += 1
                 else:
-                    sleep(0.5)
-                result = add_song_to_playlist(
-                    s, track_id, playlist_identifier, playlist_track_ids, playlist_name
-                )
-                if result == "OK":
-                    converted += 1
-                elif result == "ERROR":
-                    with open(
-                        f"{playlist_name}_noresult.txt", "a+", encoding="utf-8"
-                    ) as f:
-                        f.write(
-                            f"{title} | {artist} | {album} => UNABLE TO ADD TO PLAYLIST\n"
-                        )
+                    print(
+                        f"No result found for {title} | {artist} | {album} | {date} with {isrc}. Trying text based search..."
+                    )
+                    track_id = get_itunes_id(title, artist, album, date)
+                    api_calls_this_track += 1
+                    if track_id:
+                        text_based += 1
+                # If the song is found, add it to the playlist
+                if track_id:
+                    print(f"N°{n} | {title} | {artist} | {album} => {track_id}")
+                    if str(track_id) in playlist_track_ids:
+                        print(f"Song {track_id} already in playlist {playlist_name}!\n")
+                        failed += 1
+                        continue
+                    if delay >= 0.5:
+                        sleep(delay)
+                    else:
+                        sleep(0.5)
+                    result = add_song_to_playlist(
+                        s, track_id, playlist_identifier, playlist_track_ids, playlist_name
+                    )
+                    api_calls_this_track += 1
+                    if result == "OK":
+                        converted += 1
+                    elif result == "ERROR":
+                        with open(
+                            f"{playlist_name}_noresult.txt", "a+", encoding="utf-8"
+                        ) as f:
+                            f.write(
+                                f"{title} | {artist} | {album} => UNABLE TO ADD TO PLAYLIST\n"
+                            )
+                            f.write("\n")
+                        failed += 1
+                    elif result == "DUPLICATE":
+                        failed += 1
+                # If not, write it in a file
+                else:
+                    print(f"N°{n} | {title} | {artist} | {album} => NOT FOUND\n")
+                    with open(f"{playlist_name}_noresult.txt", "a+", encoding="utf-8") as f:
+                        f.write(f"{title} | {artist} | {album} => NOT FOUND\n")
                         f.write("\n")
                     failed += 1
-                elif result == "DUPLICATE":
-                    failed += 1
-            # If not, write it in a file
-            else:
-                print(f"N°{n} | {title} | {artist} | {album} => NOT FOUND\n")
+                sleep_time = max(3*api_calls_this_track, 3)
+            except Exception as e:
+                print(f"An error occurred while processing song {n}: {e}")
                 with open(f"{playlist_name}_noresult.txt", "a+", encoding="utf-8") as f:
-                    f.write(f"{title} | {artist} | {album} => NOT FOUND\n")
-                    f.write("\n")
-                failed += 1
-            sleep(delay)
+                        f.write(f"{title} | {artist} | {album} => NOT FOUND\n")
+                        f.write("\n")
     # Printing the stats report
     converted_percentage = round(converted / n * 100) if n > 0 else 100
     print(
